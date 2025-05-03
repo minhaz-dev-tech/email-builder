@@ -1,39 +1,48 @@
 <template>
   <div class="editor-container">
-    <div
-      ref="editor"
-      class="editor"
-      contenteditable="true"
-      @input="onEditorInput"
-    ></div>
-    <p style="display: none">{{ dummYInt }}</p>
-    <button @click="insertStyledButton">Insert Draggable Button</button>
-    <button @click="triggerImageUpload">Insert Background Image</button>
-    <button @click="applyCustomList('ol')">Ordered List</button>
-    <button @click="applyCustomList('ul')">Unordered List</button>
-    <button @click="insertGrid">Insert Grid</button>
-    <button @click="insertLink">Insert Link</button>
+    <!-- Toolbar -->
     <div class="toolbar">
-      <button @click="format('bold')" :class="{ active: isActive('bold') }">
-        <b>B</b>
+      <button @click="insertStyledButton" title="Insert Draggable Button">
+        <i class="fas fa-arrows-alt"></i>
       </button>
-      <button @click="format('italic')" :class="{ active: isActive('italic') }">
-        <i class="fa-solid fa-italic"></i>
+      <button @click="triggerImageUpload" title="Insert Background Image">
+        <i class="fas fa-image"></i>
       </button>
-      <button
-        @click="insertList('unordered')"
-        :class="{ active: isActive('insertUnorderedList') }"
-      >
-        <i class="fa-solid fa-list-ul"></i>Ul
+      <button @click="alignTextLeft" title="Align Left" :class="{ active: isActive('justifyLeft') }">
+      <i class="fas fa-align-left"></i> 
+    </button>
+
+    <!-- Align Right Button -->
+    <button @click="alignTextRight" title="Align Right" :class="{ active: isActive('justifyRight') }">
+      <i class="fas fa-align-right"></i> 
+    </button>
+      <button @click="insertList('ordered')" title="Ordered List"  :class="{ active: isOrderedListActive}">
+        <i class="fas fa-list-ol"></i>
       </button>
-      <button
-        @click="insertList('ordered')"
-        :class="{ active: isActive('insertOrderedList') }"
-      >
-        <i class="fa-solid fa-list-ol"></i>Ol
+      <button @click="insertList('unordered')" title="Unordered List"  :class="{ active: isUnorderedListActive}">
+        <i class="fas fa-list-ul"></i>
+      </button>
+      <button @click="insertGrid" title="Insert Grid">
+        <i class="fas fa-th"></i>
+      </button>
+      <button @click="insertLink" title="Insert Link">
+        <i class="fas fa-link"></i>
+      </button>
+      <button @click="format('bold')" :class="{ active: isActive('bold') }" title="Bold">
+        <i class="fas fa-bold"></i>
+      </button>
+      <button @click="format('italic')" :class="{ active: isActive('italic') }" title="Italic">
+        <i class="fas fa-italic"></i>
       </button>
     </div>
 
+    <!-- Editor -->
+    <div ref="editor"  class="editor" contenteditable="true" @input="onEditorInput"></div>
+
+    <!-- Hidden Dummy -->
+
+
+    <!-- Hidden File Upload -->
     <input
       ref="fileInput"
       type="file"
@@ -41,43 +50,117 @@
       @change="handleImageUpload"
       style="display: none"
     />
-    <!-- Modal for editing button styles -->
+
+    <!-- Modal Popup -->
     <ButtonStylePopup ref="popup" />
   </div>
 </template>
 
+
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, onMounted, onBeforeUnmount, nextTick,watch  } from "vue";
 import interact from "interactjs";
 import ButtonStylePopup from "./ButtonStylePopup.vue"; // Import the popup component
-
+const props = defineProps({ modelValue: String });
+const emit = defineEmits(['update:modelValue']);
 const editor = ref(null);
 const popup = ref(null); // Define ref for ButtonStylePopup
 const fileInput = ref(null);
-const dummYInt = ref(0);
 const editorContent = ref(null);
 const imageText = ref(null);
-const isActive = (command) => {
+const selectionVersion = ref(0); 
+const isUnorderedListActive = ref(false)
+const isOrderedListActive = ref(false)
+const imageWrapper = ref(null);
+function isActive(command) {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return false;
+
+    const node = selection.getRangeAt(0).startContainer;
+
+    const isInsideEditor = editor.value && editor.value.contains(node);
+    const isInsideImageWrapper = imageWrapper.value && imageWrapper.value.contains(node);
+
+    if (!isInsideEditor && !isInsideImageWrapper) return false;
+
+    let currentNode = node;
+    while (currentNode) {
+        if (command === 'insertUnorderedList' && currentNode.nodeName === 'UL') {
+            return true;
+        }
+        if (command === 'insertOrderedList' && currentNode.nodeName === 'OL') {
+            return true;
+        }
+        if (command === 'bold' && currentNode.nodeName === 'B') {
+            return true;
+        }
+
+        currentNode = currentNode.parentNode;
+    }
+
+    switch (command) {
+        case 'bold':
+            return document.queryCommandState?.('bold') ?? false;
+        case 'italic':
+            return document.queryCommandState?.('italic') ?? false;
+        case 'underline':
+            return document.queryCommandState?.('underline') ?? false;
+        case 'insertUnorderedList':
+            return document.queryCommandState?.('insertUnorderedList') ?? false;
+        case 'insertOrderedList':
+            return document.queryCommandState?.('insertOrderedList') ?? false;
+        case 'justifyLeft':
+            return document.queryCommandState?.('justifyLeft') ?? false;
+        case 'justifyRight':
+            return document.queryCommandState?.('justifyRight') ?? false;
+        default:
+            return false;
+    }
+}
+
+
+const updateActiveStates = () => {
+  isUnorderedListActive.value = isActive('insertUnorderedList')
+  isOrderedListActive.value = isActive('insertOrderedList')
+}
+const alignTextLeft = () => {
+  document.execCommand('justifyLeft');
+};
+
+const alignTextRight = () => {
+  document.execCommand('justifyRight');
+};
+
+const insertLink = () => {
   const selection = window.getSelection();
-  if (!selection.rangeCount) return false;
 
-  const node = selection.getRangeAt(0).startContainer;
-
-  if (!editor.value.contains(node)) return false; // <- ensure it's inside this editor
-
-  let currentNode = node;
-  while (currentNode) {
-    if (command === "insertUnorderedList" && currentNode.nodeName === "UL") {
-      return true;
-    }
-    if (command === "insertOrderedList" && currentNode.nodeName === "OL") {
-      return true;
-    }
-    currentNode = currentNode.parentNode;
+  // Ensure there is a selection
+  if (!selection.rangeCount || selection.isCollapsed) {
+    alert("Please select the text you want to turn into a link.");
+    return;
   }
 
-  return document.queryCommandState(command);
+  let url = prompt("Enter the URL (must start with http:// or https://):");
+
+  // Cancelled or empty
+  if (!url) return;
+
+  // Trim whitespace
+  url = url.trim();
+
+  // Basic validation
+  const isValidUrl = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i.test(url);
+
+  if (!isValidUrl) {
+    alert("Invalid URL. Please enter a valid link starting with http:// or https://");
+    return;
+  }
+
+  // Use execCommand to create link (for contenteditable)
+  document.execCommand("createLink", false, url);
 };
+
+
 
 const updateContent = () => {
   const selection = window.getSelection();
@@ -90,7 +173,7 @@ const updateContent = () => {
   if (range) {
     const markerNode = document.createTextNode(markerId);
     range.insertNode(markerNode);
-    dummYInt.value++; // Optional: to trigger reactivity
+    // dummYInt.value++; // Optional: to trigger reactivity
   }
 
   // 2. Update editorContent with marker
@@ -129,143 +212,161 @@ const updateContent = () => {
     }
   });
 };
+onMounted(() => {
+  editor.value.innerHTML = props.modelValue || '';
+  document.addEventListener('selectionchange', updateSelectionVersion);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('selectionchange', updateSelectionVersion);
+});
+const updateSelectionVersion = () => {
 
+  const selection = window.getSelection();
+  if (
+    selection &&
+    selection.rangeCount &&
+    (editor.value?.contains(selection.anchorNode) ||
+     imageText.value?.contains(selection.anchorNode))
+  ) {
+
+    selectionVersion.value++; // trigger reactive update
+  }
+};
+watch(() => props.modelValue, (val) => {
+  if (val !== editor.value.innerHTML) {
+    editor.value.innerHTML = val;
+  }
+});
 const format = (command) => {
   const selection = window.getSelection();
   if (!selection.rangeCount) return;
 
   const range = selection.getRangeAt(0);
   // Only format if selection is inside this editor
-  if (!editor.value.contains(range.startContainer)) return;
+  if (!editor.value && !editor.value.contains(range.startContainer)) return;
 
   document.execCommand(command, false, null);
   //nextTick(() => updateContent());
 };
 
 const recreateList = (type) => {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) return
 
-  const range = selection.getRangeAt(0);
-  if (
-    !editor.value?.contains(range.startContainer) &&
-    !imageText.value?.contains(range.startContainer)
-  )
-    return;
+  const range = selection.getRangeAt(0)
+  const selectedText = selection.toString().trim()
+  if (!selectedText) return
 
-  const selectedText = selection.toString().trim();
-  if (!selectedText) return;
+  const lines = selectedText.split('\n').filter(line => line.trim() !== '')
+  if (lines.length === 0) return
 
-  const lines = selectedText.split("\n").filter((line) => line.trim() !== "");
-  if (!lines.length) return;
+  const list = document.createElement(type === 'unordered' ? 'ul' : 'ol')
+  lines.forEach(line => {
+    const listItem = document.createElement('li')
+    listItem.textContent = line.trim()
+    list.appendChild(listItem)
+  })
 
-  const list = document.createElement(type === "unordered" ? "ul" : "ol");
-  lines.forEach((line) => {
-    const li = document.createElement("li");
-    li.textContent = line.trim();
-    list.appendChild(li);
-  });
-
-  if (type === "unordered") {
-    list.style.listStyleType = "disc";
-    list.style.paddingLeft = "2rem";
+  if (type === 'unordered') {
+    list.style.listStyleType = 'disc'
+    list.style.paddingLeft = '2rem'
   }
 
-  range.deleteContents();
-  range.insertNode(list);
+  range.deleteContents()
+  range.insertNode(list)
 
-  const newRange = document.createRange();
-  newRange.setStartAfter(list);
-  selection.removeAllRanges();
-  selection.addRange(newRange);
-
-  nextTick(() => updateContent());
+  const newRange = document.createRange()
+  newRange.setStartAfter(list)
+  selection.removeAllRanges()
+  selection.addRange(newRange)
 };
 
 const insertList = (type) => {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
+  const editorEl = editor.value
+  const imageTextEl = imageText.value
+  const selection = window.getSelection()
 
-  const range = selection.getRangeAt(0);
+  if (!selection || selection.rangeCount === 0) return
+  const range = selection.getRangeAt(0)
 
-  const inEditor = editor.value?.contains(range.startContainer);
-  const inImageText = imageText.value?.contains(range.startContainer);
-  if (!inEditor && !inImageText) return;
+  const inEditor = editorEl && editorEl.contains(range.startContainer)
+  const inImageText = imageTextEl && imageTextEl.contains(range.startContainer)
+  if (!inEditor && !inImageText) return
 
-  let node = range.startContainer;
-  let insideList = false;
-  let foundList = null;
+  let node = range.startContainer
+  let insideList = false
+  let foundList = null
 
-  while (node && node !== editor.value && node !== imageText.value) {
-    if (node.nodeName === "UL" || node.nodeName === "OL") {
-      insideList = true;
-      foundList = node;
-      break;
+  while (node && node !== editorEl && node !== imageTextEl) {
+    if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+      insideList = true
+      foundList = node
+      break
     }
-    node = node.parentNode;
+    node = node.parentNode
   }
 
   if (insideList && foundList) {
-    const fragment = document.createDocumentFragment();
-    const children = Array.from(foundList.children);
-    let lastInserted = null;
+    const fragment = document.createDocumentFragment()
+    const children = Array.from(foundList.children)
+    let lastInserted = null
 
-    children.forEach((li) => {
+    children.forEach(li => {
       while (li.firstChild) {
-        lastInserted = li.firstChild;
-        fragment.appendChild(li.firstChild);
+        lastInserted = li.firstChild
+        fragment.appendChild(li.firstChild)
       }
       if (li !== children[children.length - 1]) {
-        fragment.appendChild(document.createElement("br"));
+        fragment.appendChild(document.createElement('br'))
       }
-    });
+    })
 
-    foundList.parentNode.replaceChild(fragment, foundList);
+    foundList.parentNode.replaceChild(fragment, foundList)
 
     nextTick(() => {
       if (lastInserted) {
-        const newRange = document.createRange();
-        newRange.setStartAfter(lastInserted);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
+        const newRange = document.createRange()
+        newRange.setStartAfter(lastInserted)
+        newRange.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(newRange)
       }
 
-      recreateList(type);
+      recreateList(type)
+      updateActiveStates()
 
       nextTick(() => {
-        const newList = editor.value.querySelector(
-          type === "unordered" ? "ul" : "ol"
-        );
+        const newList = editorEl.querySelector(type === 'unordered' ? 'ul' : 'ol')
         if (newList?.lastElementChild) {
-          const li = newList.lastElementChild;
-          const range = document.createRange();
-          range.selectNodeContents(li);
-          range.collapse(false);
-          selection.removeAllRanges();
-          selection.addRange(range);
+          const lastLi = newList.lastElementChild
+          const range = document.createRange()
+          range.selectNodeContents(lastLi)
+          range.collapse(false)
+          selection.removeAllRanges()
+          selection.addRange(range)
         }
-        updateContent();
-      });
-    });
+        updateContent()
+      })
+    })
   } else {
-    recreateList(type);
+    recreateList(type)
 
     nextTick(() => {
-      const newList = editor.value.querySelector(
-        type === "unordered" ? "ul" : "ol"
-      );
+      const newList = editorEl.querySelector(type === 'unordered' ? 'ul' : 'ol')
       if (newList?.lastElementChild) {
-        const li = newList.lastElementChild;
-        const range = document.createRange();
-        range.selectNodeContents(li);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
+        const lastLi = newList.lastElementChild
+        const range = document.createRange()
+        range.selectNodeContents(lastLi)
+        range.collapse(false)
+        selection.removeAllRanges()
+        selection.addRange(range)
       }
-    });
+
+      updateActiveStates()
+    })
   }
 };
+
 
 function applyCustomList(type = "ul") {
   const sel = window.getSelection();
@@ -299,6 +400,8 @@ function applyCustomList(type = "ul") {
   newRange.selectNodeContents(list);
   newRange.collapse(false);
   sel.addRange(newRange);
+  nextTick(() => updateContent());
+
 }
 
 function triggerImageUpload() {
@@ -504,12 +607,17 @@ function makeButtonDraggable(button, container) {
 }
 
 function onEditorInput() {
-  updateContent();
+  emit('update:modelValue', editor.value.innerHTML);
+  nextTick(() => {
+    updateContent()
+  })
 }
 
 function insertGrid() {
   const target = editor.value;
   if (!target) return;
+
+  const container = document.createElement("div"); // Holds grid and remove button
 
   const gridWrapper = document.createElement("div");
   gridWrapper.classList.add("grid-wrapper");
@@ -519,8 +627,8 @@ function insertGrid() {
 
   Object.assign(gridWrapper.style, {
     position: "absolute",
-    top: "0",
-    left: "0",
+    top: "50px",
+    left: "50px",
     padding: "10px",
     backgroundColor: "#f8f8f8",
     border: "2px dashed #aaa",
@@ -528,52 +636,93 @@ function insertGrid() {
     flexDirection: "row",
     gap: "10px",
     zIndex: 10,
-    overflow: "hidden", // Prevents overflow when resizing grid
+    overflow: "hidden",
   });
 
-  // Make the entire grid resizable
-  interact(gridWrapper).resizable({
-    edges: { top: true, left: true, bottom: true, right: true },
-    modifiers: [
-      interact.modifiers.restrictEdges({
-        outer: target,
-      }),
-    ],
-    onmove(event) {
-      const { x, y } = gridWrapper.dataset;
-      gridWrapper.style.width = `${event.rect.width}px`;
-      gridWrapper.style.height = `${event.rect.height}px`;
-      gridWrapper.style.transform = `translate(${x}px, ${y}px)`;
-    },
-  });
-
-  // Add default 2 columns
+  // Add initial columns
   for (let i = 0; i < 2; i++) {
     addColumn(gridWrapper);
   }
 
-  // Add 'Add Column' Button
+  // Add column button - separate from grid
   const addBtn = document.createElement("button");
   addBtn.innerText = "+ Column";
   Object.assign(addBtn.style, {
-    marginTop: "10px",
+    position: "absolute",
+    top: "150px",
+    left: "50px",
     cursor: "pointer",
+    padding: "8px 12px",
+    zIndex: 20,
+    backgroundColor: "#2ecc71",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
   });
 
+  // When clicked, adds column to this grid
   addBtn.addEventListener("click", () => {
     addColumn(gridWrapper);
   });
 
-  const container = document.createElement("div");
+  // Make add column button draggable
+  interact(addBtn).draggable({
+    inertia: true,
+    modifiers: [
+      interact.modifiers.restrictRect({
+        restriction: target,
+        endOnly: true,
+      }),
+    ],
+    listeners: {
+      move(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute("data-x", x);
+        target.setAttribute("data-y", y);
+      },
+    },
+  });
+
+  // Remove Grid Button
+  const removeBtn = document.createElement("button");
+  removeBtn.innerText = "🗑 Remove Grid";
+  Object.assign(removeBtn.style, {
+    marginTop: "10px",
+    cursor: "pointer",
+    color: "white",
+    backgroundColor: "#e74c3c",
+    border: "none",
+    padding: "5px 10px",
+    borderRadius: "4px",
+    display: "block",
+  });
+
+  removeBtn.addEventListener("click", () => {
+    container.remove();
+    addBtn.remove(); // also remove the floating button
+  });
+
   container.appendChild(gridWrapper);
-  container.appendChild(addBtn);
+  container.appendChild(removeBtn);
   target.appendChild(container);
+  target.appendChild(addBtn); // add the draggable column button to editor
 
   nextTick(() => {
     makeDraggableGrid(gridWrapper, target);
-    Array.from(gridWrapper.children).forEach(makeResizableGrid); // Add resizable functionality to columns
+    Array.from(gridWrapper.children).forEach(child => {
+      if (child.tagName !== 'BUTTON') {
+        makeResizableGrid(child);
+      }
+    });
   });
 }
+
+
+
 
 function addColumn(wrapper) {
   const cell = document.createElement("div");
@@ -660,43 +809,56 @@ function makeLink() {
 </script>
 
 <style scoped>
-.editor {
-  white-space: nowrap;
-}
-
-.editor ul,
-.editor ol {
-  padding-left: 20px;
-}
-
 .editor-container {
-  padding: 20px;
-}
 
-.editor {
-  border: 1px solid #ccc;
-  min-height: 200px;
-  position: relative;
-  padding: 10px;
-}
 
-.draggable-button {
-  position: absolute;
-}
-.editor-container {
-  padding: 20px;
-}
-
-.editor {
-  border: 1px solid #ccc;
-  min-height: 300px;
-  position: relative;
-  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   background: #fff;
   overflow: hidden;
+  text-align: start;
 }
 
-.tools {
-  margin-top: 10px;
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #ddd;
+  gap: 8px;
 }
+
+.toolbar button {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toolbar button:hover {
+  background: #e6e6e6;
+}
+
+.toolbar button.active {
+  background-color: #007acc;
+  color: white;
+  border-color: #007acc;
+}
+
+.editor {
+  min-height: 300px;
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  outline: none;
+  position: relative;
+}
+
 </style>

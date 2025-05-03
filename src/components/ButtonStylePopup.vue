@@ -4,10 +4,27 @@
       <h3>Edit Button Styles</h3>
       <div>
         <label>
+        Button Text:
+          <input type="text" v-model="buttonStyle.text" />
+        </label>
+      </div>
+      <div>
+        <label>
           Background Color:
           <input type="color" v-model="buttonStyle.backgroundColor" />
         </label>
       </div>
+      <div>
+  <label>
+    Button Link (URL):
+    <input
+      type="text"
+      v-model="buttonStyle.link"
+      placeholder="e.g. https://example.com"
+    />
+  </label>
+     </div>
+
       <div>
         <label>
           Text Color:
@@ -25,6 +42,17 @@
         </label>
       </div>
       <div>
+  <label>
+    Border Radius:
+    <input
+      type="text"
+      v-model="buttonStyle.borderRadius"
+      placeholder="e.g. 4px or 50%"
+    />
+  </label>
+</div>
+
+      <div>
         <button @click="applyStyle">Apply</button>
         <button @click="closePopup">Close</button>
       </div>
@@ -40,7 +68,11 @@ const buttonStyle = ref({
   backgroundColor: "#f0f0f0",
   color: "#000000",
   padding: "6px 10px",
+  borderRadius: "4px",
+  text: "Click me",
+  link: ""
 });
+
 const selectedButton = ref(null);
 
 const showPopup = (button) => {
@@ -49,7 +81,12 @@ const showPopup = (button) => {
   buttonStyle.value.backgroundColor = button.style.backgroundColor;
   buttonStyle.value.color = button.style.color;
   buttonStyle.value.padding = button.style.padding;
+  buttonStyle.value.borderRadius = button.style.borderRadius;
+  buttonStyle.value.text = button.textContent;
+  buttonStyle.value.link = selectedButton.value.getAttribute("data-link") || "";
+
 };
+
 
 const closePopup = () => {
   visible.value = false;
@@ -58,10 +95,20 @@ const closePopup = () => {
 const applyStyle = () => {
   if (!selectedButton.value) return;
   Object.assign(selectedButton.value.style, {
-    backgroundColor: buttonStyle.value.backgroundColor,
-    color: buttonStyle.value.color,
-    padding: buttonStyle.value.padding,
-  });
+  backgroundColor: buttonStyle.value.backgroundColor,
+  color: buttonStyle.value.color,
+  padding: buttonStyle.value.padding,
+  borderRadius: buttonStyle.value.borderRadius,
+});
+selectedButton.value.textContent = buttonStyle.value.text;
+
+selectedButton.value.textContent = buttonStyle.value.text;
+selectedButton.value.setAttribute("data-link", buttonStyle.value.link || "");
+selectedButton.value.onclick = () => {
+  if (buttonStyle.value.link) {
+    window.open(buttonStyle.value.link, "_blank");
+  }
+};
 
   closePopup(); // Close the popup after applying styles
 };

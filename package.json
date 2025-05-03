@@ -1,8 +1,11 @@
 {
-  "name": "draggable-button-editor",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@dev_minhaz/vue-email-editor",
+  "version": "2.1.0",
   "type": "module",
+  "main": "dist/email-editor.umd.js",
+  "module": "dist/email-editor.esm.js",
+  "description": "A lightweight and customizable Vue Email Editor with drag-and-drop, background images, grid layout, and more.",
+  "files": ["dist"],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -15,5 +18,12 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.2",
     "vite": "^6.3.1"
-  }
+  },
+  "keywords": ["vue", "email", "editor", "component", "email-builder"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minhaz-dev-tech/email-builder.git"
+  },
+  "author": "Your Name",
+  "license": "MIT"
 }

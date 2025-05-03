@@ -1,10 +1,10 @@
 <script setup>
-import Editor from "./components/Editor.vue";
+import TestEditorComponent from "./components/TestEditorComponent.vue";
 </script>
 
 <template>
   <div>
-    <Editor />
+    <TestEditorComponent />
   </div>
 </template>
 
