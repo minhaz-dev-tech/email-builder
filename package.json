@@ -1,13 +1,21 @@
 {
   "name": "@dev_minhaz/vue-email-editor",
-  "version": "4.5.0",
+  "version": "5.12.0",
   "type": "module",
   "main": "dist/email-editor.umd.js",
-  "module": "dist/email-editor.esm.js",
+  "module": "dist/email-editor.es.js",
+  "style": "dist/vue-email-editor.css",
+  "exports": {
+    ".": {
+      "import": "./dist/email-editor.es.js",
+      "require": "./dist/email-editor.umd.js"
+    },
+    "./dist/vue-email-editor.css": {
+      "default": "./dist/vue-email-editor.css"
+    }
+  },
+  "files": ["dist"],
   "description": "A lightweight and customizable Vue Email Editor with drag-and-drop, background images, grid layout, and more.",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -21,13 +29,7 @@
     "@vitejs/plugin-vue": "^5.2.2",
     "vite": "^6.3.1"
   },
-  "keywords": [
-    "vue",
-    "email",
-    "editor",
-    "component",
-    "email-builder"
-  ],
+  "keywords": ["vue", "email", "editor", "component", "email-builder"],
   "repository": {
     "type": "git",
     "url": "https://github.com/minhaz-dev-tech/email-builder.git"
