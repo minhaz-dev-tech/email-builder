@@ -15,7 +15,7 @@ const content =
           <!-- Header -->
           <tr>
             <td align="center" style="padding-bottom: 20px;">
-              <img src="https://jrfjobbank.com/build/assets/jrf-intel-logo-WHYP37uG.png" alt="Logo"  />
+              <img src="https://yourlogo.url/logo.png" alt="Logo" width="120" />
             </td>
           </tr>
 
@@ -44,10 +44,10 @@ const content =
           <!-- CTA Button -->
           <tr>
             <td align="center">
-              <button class="draggable-button"
+              <a href="https://yourjobportal.com/match" 
                  style="background-color:#007BFF; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:6px; font-size:16px;">
                 View Jobs Now
-              </button>
+              </a>
             </td>
           </tr>
 
