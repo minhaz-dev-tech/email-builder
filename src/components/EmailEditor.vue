@@ -8,18 +8,34 @@
       <button @click="triggerImageUpload" title="Insert Background Image">
         <i class="fas fa-image"></i>
       </button>
-      <button @click="alignTextLeft" title="Align Left" :class="{ active: isActive('justifyLeft') }">
-      <i class="fas fa-align-left"></i> 
-    </button>
+      <button
+        @click="alignTextLeft"
+        title="Align Left"
+        :class="{ active: isActive('justifyLeft') }"
+      >
+        <i class="fas fa-align-left"></i>
+      </button>
 
-    <!-- Align Right Button -->
-    <button @click="alignTextRight" title="Align Right" :class="{ active: isActive('justifyRight') }">
-      <i class="fas fa-align-right"></i> 
-    </button>
-      <button @click="insertList('ordered')" title="Ordered List"  :class="{ active: isOrderedListActive}">
+      <!-- Align Right Button -->
+      <button
+        @click="alignTextRight"
+        title="Align Right"
+        :class="{ active: isActive('justifyRight') }"
+      >
+        <i class="fas fa-align-right"></i>
+      </button>
+      <button
+        @click="insertList('ordered')"
+        title="Ordered List"
+        :class="{ active: isOrderedListActive }"
+      >
         <i class="fas fa-list-ol"></i>
       </button>
-      <button @click="insertList('unordered')" title="Unordered List"  :class="{ active: isUnorderedListActive}">
+      <button
+        @click="insertList('unordered')"
+        title="Unordered List"
+        :class="{ active: isUnorderedListActive }"
+      >
         <i class="fas fa-list-ul"></i>
       </button>
       <button @click="insertGrid" title="Insert Grid">
@@ -28,19 +44,31 @@
       <button @click="insertLink" title="Insert Link">
         <i class="fas fa-link"></i>
       </button>
-      <button @click="format('bold')" :class="{ active: isActive('bold') }" title="Bold">
+      <button
+        @click="format('bold')"
+        :class="{ active: isActive('bold') }"
+        title="Bold"
+      >
         <i class="fas fa-bold"></i>
       </button>
-      <button @click="format('italic')" :class="{ active: isActive('italic') }" title="Italic">
+      <button
+        @click="format('italic')"
+        :class="{ active: isActive('italic') }"
+        title="Italic"
+      >
         <i class="fas fa-italic"></i>
       </button>
     </div>
 
     <!-- Editor -->
-    <div ref="editor"  class="editor" contenteditable="true" @input="onEditorInput"></div>
+    <div
+      ref="editor"
+      class="editor"
+      contenteditable="true"
+      @input="onEditorInput"
+    ></div>
 
     <!-- Hidden Dummy -->
-
 
     <!-- Hidden File Upload -->
     <input
@@ -58,77 +86,78 @@
 
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick,watch  } from "vue";
+import { ref, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import interact from "interactjs";
 import ButtonStylePopup from "./ButtonStylePopup.vue"; // Import the popup component
 const props = defineProps({ modelValue: String });
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(["update:modelValue"]);
 const editor = ref(null);
 const popup = ref(null); // Define ref for ButtonStylePopup
 const fileInput = ref(null);
+const enhancedImages = new WeakSet();
 const editorContent = ref(null);
 const imageText = ref(null);
-const selectionVersion = ref(0); 
-const isUnorderedListActive = ref(false)
-const isOrderedListActive = ref(false)
+const selectionVersion = ref(0);
+const isUnorderedListActive = ref(false);
+const isOrderedListActive = ref(false);
 const imageWrapper = ref(null);
 function isActive(command) {
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return false;
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return false;
 
-    const node = selection.getRangeAt(0).startContainer;
+  const node = selection.getRangeAt(0).startContainer;
 
-    const isInsideEditor = editor.value && editor.value.contains(node);
-    const isInsideImageWrapper = imageWrapper.value && imageWrapper.value.contains(node);
+  const isInsideEditor = editor.value && editor.value.contains(node);
+  const isInsideImageWrapper =
+    imageWrapper.value && imageWrapper.value.contains(node);
 
-    if (!isInsideEditor && !isInsideImageWrapper) return false;
+  if (!isInsideEditor && !isInsideImageWrapper) return false;
 
-    let currentNode = node;
-    while (currentNode) {
-        if (command === 'insertUnorderedList' && currentNode.nodeName === 'UL') {
-            return true;
-        }
-        if (command === 'insertOrderedList' && currentNode.nodeName === 'OL') {
-            return true;
-        }
-        if (command === 'bold' && currentNode.nodeName === 'B') {
-            return true;
-        }
-
-        currentNode = currentNode.parentNode;
+  let currentNode = node;
+  while (currentNode) {
+    if (command === "insertUnorderedList" && currentNode.nodeName === "UL") {
+      return true;
+    }
+    if (command === "insertOrderedList" && currentNode.nodeName === "OL") {
+      return true;
+    }
+    if (command === "bold" && currentNode.nodeName === "B") {
+      return true;
     }
 
-    switch (command) {
-        case 'bold':
-            return document.queryCommandState?.('bold') ?? false;
-        case 'italic':
-            return document.queryCommandState?.('italic') ?? false;
-        case 'underline':
-            return document.queryCommandState?.('underline') ?? false;
-        case 'insertUnorderedList':
-            return document.queryCommandState?.('insertUnorderedList') ?? false;
-        case 'insertOrderedList':
-            return document.queryCommandState?.('insertOrderedList') ?? false;
-        case 'justifyLeft':
-            return document.queryCommandState?.('justifyLeft') ?? false;
-        case 'justifyRight':
-            return document.queryCommandState?.('justifyRight') ?? false;
-        default:
-            return false;
-    }
+    currentNode = currentNode.parentNode;
+  }
+
+  switch (command) {
+    case "bold":
+      return document.queryCommandState?.("bold") ?? false;
+    case "italic":
+      return document.queryCommandState?.("italic") ?? false;
+    case "underline":
+      return document.queryCommandState?.("underline") ?? false;
+    case "insertUnorderedList":
+      return document.queryCommandState?.("insertUnorderedList") ?? false;
+    case "insertOrderedList":
+      return document.queryCommandState?.("insertOrderedList") ?? false;
+    case "justifyLeft":
+      return document.queryCommandState?.("justifyLeft") ?? false;
+    case "justifyRight":
+      return document.queryCommandState?.("justifyRight") ?? false;
+    default:
+      return false;
+  }
 }
-
 
 const updateActiveStates = () => {
-  isUnorderedListActive.value = isActive('insertUnorderedList')
-  isOrderedListActive.value = isActive('insertOrderedList')
-}
+  isUnorderedListActive.value = isActive("insertUnorderedList");
+  isOrderedListActive.value = isActive("insertOrderedList");
+};
 const alignTextLeft = () => {
-  document.execCommand('justifyLeft');
+  document.execCommand("justifyLeft");
 };
 
 const alignTextRight = () => {
-  document.execCommand('justifyRight');
+  document.execCommand("justifyRight");
 };
 
 const insertLink = () => {
@@ -152,15 +181,15 @@ const insertLink = () => {
   const isValidUrl = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i.test(url);
 
   if (!isValidUrl) {
-    alert("Invalid URL. Please enter a valid link starting with http:// or https://");
+    alert(
+      "Invalid URL. Please enter a valid link starting with http:// or https://"
+    );
     return;
   }
 
   // Use execCommand to create link (for contenteditable)
   document.execCommand("createLink", false, url);
 };
-
-
 
 const updateContent = () => {
   const selection = window.getSelection();
@@ -213,30 +242,77 @@ const updateContent = () => {
   });
 };
 onMounted(() => {
-  editor.value.innerHTML = props.modelValue || '';
-  document.addEventListener('selectionchange', updateSelectionVersion);
+  editor.value.innerHTML = props.modelValue || "";
+  enhanceImages();
+  const target = editor.value;
+  if (!target) return;
+
+  const buttons = target.querySelectorAll(".draggable-button");
+
+  buttons.forEach((button) => {
+    // Ensure it's not re-initialized
+    if (!button.dataset.initialized) {
+      // Make draggable
+      makeButtonDraggable(button, target);
+
+      // Open popup on click
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popup.value?.showPopup(button);
+      });
+
+      // Enable contenteditable on double click
+      button.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        button.setAttribute("contenteditable", "true");
+        button.setAttribute("data-draggable", "false");
+        button.focus();
+        button.style.cursor = "text";
+      });
+
+      // Disable edit mode on blur
+      button.addEventListener("blur", () => {
+        button.setAttribute("contenteditable", "false");
+        button.setAttribute("data-draggable", "true");
+        button.style.cursor = "move";
+        makeButtonDraggable(button, target);
+      });
+
+      button.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          button.blur();
+        }
+      });
+
+      // Mark as initialized to avoid re-adding listeners
+      button.dataset.initialized = "true";
+    }
+  });
+  document.addEventListener("selectionchange", updateSelectionVersion);
 });
 onBeforeUnmount(() => {
-  document.removeEventListener('selectionchange', updateSelectionVersion);
+  document.removeEventListener("selectionchange", updateSelectionVersion);
 });
 const updateSelectionVersion = () => {
-
   const selection = window.getSelection();
   if (
     selection &&
     selection.rangeCount &&
     (editor.value?.contains(selection.anchorNode) ||
-     imageText.value?.contains(selection.anchorNode))
+      imageText.value?.contains(selection.anchorNode))
   ) {
-
     selectionVersion.value++; // trigger reactive update
   }
 };
-watch(() => props.modelValue, (val) => {
-  if (val !== editor.value.innerHTML) {
-    editor.value.innerHTML = val;
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val !== editor.value.innerHTML) {
+      editor.value.innerHTML = val;
+    }
   }
-});
+);
 const format = (command) => {
   const selection = window.getSelection();
   if (!selection.rangeCount) return;
@@ -250,123 +326,126 @@ const format = (command) => {
 };
 
 const recreateList = (type) => {
-  const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0) return
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
 
-  const range = selection.getRangeAt(0)
-  const selectedText = selection.toString().trim()
-  if (!selectedText) return
+  const range = selection.getRangeAt(0);
+  const selectedText = selection.toString().trim();
+  if (!selectedText) return;
 
-  const lines = selectedText.split('\n').filter(line => line.trim() !== '')
-  if (lines.length === 0) return
+  const lines = selectedText.split("\n").filter((line) => line.trim() !== "");
+  if (lines.length === 0) return;
 
-  const list = document.createElement(type === 'unordered' ? 'ul' : 'ol')
-  lines.forEach(line => {
-    const listItem = document.createElement('li')
-    listItem.textContent = line.trim()
-    list.appendChild(listItem)
-  })
+  const list = document.createElement(type === "unordered" ? "ul" : "ol");
+  lines.forEach((line) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = line.trim();
+    list.appendChild(listItem);
+  });
 
-  if (type === 'unordered') {
-    list.style.listStyleType = 'disc'
-    list.style.paddingLeft = '2rem'
+  if (type === "unordered") {
+    list.style.listStyleType = "disc";
+    list.style.paddingLeft = "2rem";
   }
 
-  range.deleteContents()
-  range.insertNode(list)
+  range.deleteContents();
+  range.insertNode(list);
 
-  const newRange = document.createRange()
-  newRange.setStartAfter(list)
-  selection.removeAllRanges()
-  selection.addRange(newRange)
+  const newRange = document.createRange();
+  newRange.setStartAfter(list);
+  selection.removeAllRanges();
+  selection.addRange(newRange);
 };
 
 const insertList = (type) => {
-  const editorEl = editor.value
-  const imageTextEl = imageText.value
-  const selection = window.getSelection()
+  const editorEl = editor.value;
+  const imageTextEl = imageText.value;
+  const selection = window.getSelection();
 
-  if (!selection || selection.rangeCount === 0) return
-  const range = selection.getRangeAt(0)
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
 
-  const inEditor = editorEl && editorEl.contains(range.startContainer)
-  const inImageText = imageTextEl && imageTextEl.contains(range.startContainer)
-  if (!inEditor && !inImageText) return
+  const inEditor = editorEl && editorEl.contains(range.startContainer);
+  const inImageText = imageTextEl && imageTextEl.contains(range.startContainer);
+  if (!inEditor && !inImageText) return;
 
-  let node = range.startContainer
-  let insideList = false
-  let foundList = null
+  let node = range.startContainer;
+  let insideList = false;
+  let foundList = null;
 
   while (node && node !== editorEl && node !== imageTextEl) {
-    if (node.nodeName === 'UL' || node.nodeName === 'OL') {
-      insideList = true
-      foundList = node
-      break
+    if (node.nodeName === "UL" || node.nodeName === "OL") {
+      insideList = true;
+      foundList = node;
+      break;
     }
-    node = node.parentNode
+    node = node.parentNode;
   }
 
   if (insideList && foundList) {
-    const fragment = document.createDocumentFragment()
-    const children = Array.from(foundList.children)
-    let lastInserted = null
+    const fragment = document.createDocumentFragment();
+    const children = Array.from(foundList.children);
+    let lastInserted = null;
 
-    children.forEach(li => {
+    children.forEach((li) => {
       while (li.firstChild) {
-        lastInserted = li.firstChild
-        fragment.appendChild(li.firstChild)
+        lastInserted = li.firstChild;
+        fragment.appendChild(li.firstChild);
       }
       if (li !== children[children.length - 1]) {
-        fragment.appendChild(document.createElement('br'))
+        fragment.appendChild(document.createElement("br"));
       }
-    })
+    });
 
-    foundList.parentNode.replaceChild(fragment, foundList)
+    foundList.parentNode.replaceChild(fragment, foundList);
 
     nextTick(() => {
       if (lastInserted) {
-        const newRange = document.createRange()
-        newRange.setStartAfter(lastInserted)
-        newRange.collapse(true)
-        selection.removeAllRanges()
-        selection.addRange(newRange)
+        const newRange = document.createRange();
+        newRange.setStartAfter(lastInserted);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
       }
 
-      recreateList(type)
-      updateActiveStates()
+      recreateList(type);
+      updateActiveStates();
 
       nextTick(() => {
-        const newList = editorEl.querySelector(type === 'unordered' ? 'ul' : 'ol')
+        const newList = editorEl.querySelector(
+          type === "unordered" ? "ul" : "ol"
+        );
         if (newList?.lastElementChild) {
-          const lastLi = newList.lastElementChild
-          const range = document.createRange()
-          range.selectNodeContents(lastLi)
-          range.collapse(false)
-          selection.removeAllRanges()
-          selection.addRange(range)
+          const lastLi = newList.lastElementChild;
+          const range = document.createRange();
+          range.selectNodeContents(lastLi);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
         }
-        updateContent()
-      })
-    })
+        updateContent();
+      });
+    });
   } else {
-    recreateList(type)
+    recreateList(type);
 
     nextTick(() => {
-      const newList = editorEl.querySelector(type === 'unordered' ? 'ul' : 'ol')
+      const newList = editorEl.querySelector(
+        type === "unordered" ? "ul" : "ol"
+      );
       if (newList?.lastElementChild) {
-        const lastLi = newList.lastElementChild
-        const range = document.createRange()
-        range.selectNodeContents(lastLi)
-        range.collapse(false)
-        selection.removeAllRanges()
-        selection.addRange(range)
+        const lastLi = newList.lastElementChild;
+        const range = document.createRange();
+        range.selectNodeContents(lastLi);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }
 
-      updateActiveStates()
-    })
+      updateActiveStates();
+    });
   }
 };
-
 
 function applyCustomList(type = "ul") {
   const sel = window.getSelection();
@@ -401,7 +480,6 @@ function applyCustomList(type = "ul") {
   newRange.collapse(false);
   sel.addRange(newRange);
   nextTick(() => updateContent());
-
 }
 
 function triggerImageUpload() {
@@ -605,12 +683,99 @@ function makeButtonDraggable(button, container) {
     },
   });
 }
+function enhanceImages() {
+  const target = editor.value;
+  if (!target) return;
+
+  const images = target.querySelectorAll("img");
+
+  images.forEach((img) => {
+    if (img.dataset.enhanced === "true") return;
+
+    // Create wrapper div
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.style.display = "inline-block";
+    wrapper.style.width = "50px";
+    wrapper.style.height = "50px";
+    wrapper.style.resize = "both";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.border = "1px dashed #ccc"; // optional for visibility
+
+    // Set image styles
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.userSelect = "none";
+    img.style.pointerEvents = "auto";
+    img.style.display = "block";
+
+    img.setAttribute("data-enhanced", "true");
+
+    // Replace image with wrapper containing the image
+    img.parentNode.insertBefore(wrapper, img);
+    wrapper.appendChild(img);
+
+    // Resizable using interact.js
+    interact(wrapper).resizable({
+      edges: { left: true, right: true, bottom: true, top: true },
+      listeners: {
+        move(event) {
+          const { width, height } = event.rect;
+          event.target.style.width = `${width}px`;
+          event.target.style.height = `${height}px`;
+        },
+      },
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: { width: 50, height: 50 },
+          max: { width: 1000, height: 1000 },
+        }),
+      ],
+    });
+
+    // On click, allow uploading a new image to replace it
+    img.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      let input = document.getElementById("image-upload-input");
+
+      if (!input) {
+        input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.id = "image-upload-input";
+        input.style.display = "none";
+        document.body.appendChild(input);
+      }
+
+      // Remove old listener and replace input
+      const newInput = input.cloneNode(true);
+      input.parentNode.replaceChild(newInput, input);
+      input = newInput;
+
+      input.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          img.src = event.target.result;
+          input.value = "";
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      input.click();
+    });
+  });
+}
 
 function onEditorInput() {
-  emit('update:modelValue', editor.value.innerHTML);
+  emit("update:modelValue", editor.value.innerHTML);
   nextTick(() => {
-    updateContent()
-  })
+    updateContent();
+  });
 }
 
 function insertGrid() {
@@ -713,16 +878,13 @@ function insertGrid() {
 
   nextTick(() => {
     makeDraggableGrid(gridWrapper, target);
-    Array.from(gridWrapper.children).forEach(child => {
-      if (child.tagName !== 'BUTTON') {
+    Array.from(gridWrapper.children).forEach((child) => {
+      if (child.tagName !== "BUTTON") {
         makeResizableGrid(child);
       }
     });
   });
 }
-
-
-
 
 function addColumn(wrapper) {
   const cell = document.createElement("div");
@@ -810,8 +972,6 @@ function makeLink() {
 
 <style scoped>
 .editor-container {
-
-
   border: 1px solid #ddd;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -860,5 +1020,4 @@ function makeLink() {
   outline: none;
   position: relative;
 }
-
 </style>
