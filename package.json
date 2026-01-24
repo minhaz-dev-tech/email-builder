@@ -1,6 +1,6 @@
 {
   "name": "@dev_minhaz/vue-email-editor",
-  "version": "5.12.0",
+  "version": "6.12.0",
   "type": "module",
   "main": "dist/email-editor.umd.js",
   "module": "dist/email-editor.es.js",
