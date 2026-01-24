@@ -521,6 +521,7 @@ function insertImageDiv(imageSrc) {
   nextTick(() => {
     makeDraggable(imgDiv, container);
     makeResizable(imgDiv, container);
+   
   });
 }
 
@@ -588,6 +589,10 @@ function makeResizable(el, container) {
         el.setAttribute("data-y", y);
       },
     },
+  });
+    emit("update:modelValue", editor.value.innerHTML);
+  nextTick(() => {
+    updateContent();
   });
 }
 function insertStyledButton() {
