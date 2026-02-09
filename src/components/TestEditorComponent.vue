@@ -1,10 +1,10 @@
 
 <template>
   <EmailEditor v-model="content" />
-    <div class="" v-html="content">
+
 
     
-  </div>
+
 </template>
 
   <script setup>
