@@ -1,5 +1,5 @@
 <template>
-  <div class="editor-container">
+  <div class="editor-container" @click="updateContent()" >
     <!-- Toolbar -->
     <div class="toolbar">
       <button @click="insertStyledButton" title="Insert Draggable Button">
@@ -246,7 +246,13 @@ onMounted(() => {
   enhanceImages();
   const target = editor.value;
   if (!target) return;
-
+  // Focus the textarea when component mounts
+  if (editor.value) {
+    editor.value.focus()
+    
+    // Optional: add a newline on focus
+    content.value += '\n'
+  }
   const buttons = target.querySelectorAll(".draggable-button");
 
   buttons.forEach((button) => {
@@ -293,6 +299,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   document.removeEventListener("selectionchange", updateSelectionVersion);
+  
 });
 const updateSelectionVersion = () => {
   const selection = window.getSelection();
